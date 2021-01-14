@@ -2,12 +2,12 @@
 
 #acme.sh dns securepoint
 
-SP_Api="https://api.spdyn.de/api/3"
+SP_Api="https://api.spdyn.de/api/2"
 
 ########  Public functions #####################
 
 #Usage: add   _acme-challenge.www.domain.com   "XKrxpRBosdIKFzxW_CT3KLZNf6q0HG9i01zxXp5CPBs"
-dns_sp_add() {
+dns_sp_v2_add() {
   fulldomain=$1
   txtvalue=$2
 
@@ -27,7 +27,7 @@ dns_sp_add() {
   _debug txtvalue "$txtvalue"
 
   _info "Adding record"
-  if _sp_rest POST "host/acmeChallenge" "{\"host\":\"$fulldomain\",\"challengeToken\":\"$txtvalue\"}"; then
+  if _sp_rest POST "acmeChallenge" "{\"host\":\"$fulldomain\",\"challengeToken\":\"$txtvalue\"}"; then
     if printf -- "%s" "$response" | grep "$fulldomain" >/dev/null; then
       _info "Added, OK"
       return 0
@@ -42,7 +42,7 @@ dns_sp_add() {
 
 #Usage: fulldomain txtvalue
 #Remove the txt record after validation.
-dns_sp_rm() {
+dns_sp_v2_rm() {
   fulldomain=$1
   txtvalue=$2
 
@@ -61,7 +61,7 @@ dns_sp_rm() {
   _debug fulldomain "$fulldomain"
   _debug txtvalue "$txtvalue"
 
-  if ! _sp_rest DELETE "host/acmeChallenge" "{\"host\":\"$fulldomain\",\"challengeToken\":\"$txtvalue\"}"; then
+  if ! _sp_rest DELETE "acmeChallenge" "{\"host\":\"$fulldomain\",\"challengeToken\":\"$txtvalue\"}"; then
     _err "Delete record error."
     return 1
   fi
@@ -75,8 +75,7 @@ _sp_rest() {
   data="$3"
   _debug "$endpoint"
 
-  export _H1="Authorization: Bearer $SP_Key"
-  export _H2="Content-Type: application/json"
+  export _H1="X-API-KEY: $SP_Key"
 
   if [ "$method" != "GET" ]; then
     _debug data "$data"
